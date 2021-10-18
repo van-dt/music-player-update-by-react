@@ -14,78 +14,46 @@ import song5_img from "./assets/img/song5.jpg";
 import song5_path from "./assets/mp3/song5.mp3";
 import song6_img from "./assets/img/song6.jpg";
 import song6_path from "./assets/mp3/song6.mp3";
-import song7_img from "./assets/img/song7.jpg";
-import song7_path from "./assets/mp3/song7.mp3";
-import song8_img from "./assets/img/song8.jpg";
-import song8_path from "./assets/mp3/song8.mp3";
-import song9_img from "./assets/img/song9.jpg";
-import song9_path from "./assets/mp3/song9.mp3";
-import song10_img from "./assets/img/song10.jpg";
-import song10_path from "./assets/mp3/song10.mp3";
 
 const songs = [
   {
-    name: "Hạ Sơn",
-    singer: "Yao Bu Yao Mai Cai",
+    name: "At My Worst",
+    singer: "PinkSweet",
     path: song1_path,
     image: song1_img,
   },
   {
-    name: "Bất Nhiễm",
-    singer: "Mao Bất Dịch",
+    name: "Lovely",
+    singer: "BillieEilish,Khalid",
     path: song2_path,
     image: song2_img,
   },
   {
-    name: "Hồng Mã",
-    singer: "Hứa Lam Tâm",
+    name: "Let Her Go",
+    singer: "Passenger",
     path: song3_path,
     image: song3_img,
   },
   {
-    name: "Niên Tuế",
-    singer: "Mao Bất Dịch",
+    name: "Love Yourself",
+    singer: "JustinBieBer",
     path: song4_path,
     image: song4_img,
   },
   {
-    name: "Tay trái chỉ trăng",
-    singer: "Tát Đỉnh Đỉnh",
+    name: "I Do",
+    singer: "911",
     path: song5_path,
     image: song5_img,
   },
   {
-    name: "Vong Tiện",
-    singer: "Vương Nhất Bác",
+    name: "One Call Away",
+    singer: "CharliePuth",
     path: song6_path,
     image: song6_img,
   },
-  {
-    name: "Xuy Diệt Tiểu Sơn Hà",
-    singer: "Tư Nam",
-    path: song7_path,
-    image: song7_img,
-  },
-  {
-    name: "Yến Vô Hiết",
-    singer: "Trương Tuyết Nhi",
-    path: song8_path,
-    image: song8_img,
-  },
-  {
-    name: "Thu Thương Biệt Luyến",
-    singer: "Mã Dược Triển",
-    path: song9_path,
-    image: song9_img,
-  },
-  {
-    name: "Thẩm Viên Ngoại",
-    singer: "Lệ Cách",
-    path: song10_path,
-    image: song10_img,
-  },
 ];
-const PlayList = ({ songs, option }) => {
+const PlayList = ({ songs, option, like }) => {
   const list = songs.map((song, index) => {
     return (
       <div key={index} className="song">
@@ -95,7 +63,7 @@ const PlayList = ({ songs, option }) => {
         <div className="song-item title">
           <h6>{song.name}</h6>
         </div>
-        <div className="song-item icon">
+        <div className="song-item icon" onClick={like}>
           <i className="far fa-heart"></i>
         </div>
       </div>
@@ -127,16 +95,30 @@ const Control = ({
   );
 };
 
-const Footer = ({ option }) => {
+const Footer = ({
+  option,
+  optionLike,
+  optionRepeat,
+  optionShuffle,
+  likeCallback,
+  repeatCallback,
+  shuffleCallback,
+}) => {
   return (
     <div className={`footer ${option}`}>
-      <div className="footer-icon love">
+      <div className={`footer-icon love ${optionLike}`} onClick={likeCallback}>
         <i className="far fa-heart"></i>
       </div>
-      <div className="footer-icon repeat">
+      <div
+        className={`footer-icon repeat ${optionRepeat}`}
+        onClick={repeatCallback}
+      >
         <i className="fas fa-redo"></i>
       </div>
-      <div className="footer-icon shuffle">
+      <div
+        className={`footer-icon shuffle ${optionShuffle}`}
+        onClick={shuffleCallback}
+      >
         <i className="fas fa-random"></i>
       </div>
       <div className="footer-icon options">
@@ -149,8 +131,13 @@ const Footer = ({ option }) => {
 const App = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(false);
   const [option, setOption] = useState("");
   const [optionPlay, setOptionPlay] = useState("");
+  const [optionLike, setOptionLike] = useState("");
+  const [optionShuffle, setOptionShuffle] = useState("");
+  const [optionRepeat, setOptionRepeat] = useState("");
   const audio = useRef(null);
 
   const handleTranformClick = () => {
@@ -172,10 +159,14 @@ const App = () => {
   const handleNext = async () => {
     const count = songs.length;
     let newIndex;
-    if (currentIndex < count - 1) {
-      newIndex = currentIndex + 1;
+    if (!isShuffle) {
+      if (currentIndex < count - 1) {
+        newIndex = currentIndex + 1;
+      } else {
+        newIndex = 0;
+      }
     } else {
-      newIndex = 0;
+      newIndex = random();
     }
     await setCurrentIndex(newIndex);
     // console.log("continue");
@@ -186,16 +177,61 @@ const App = () => {
   const handlePre = async () => {
     const count = songs.length;
     let newIndex;
-    if (currentIndex > 0) {
-      newIndex = currentIndex - 1;
+    if (!isShuffle) {
+      if (currentIndex > 0) {
+        newIndex = currentIndex - 1;
+      } else {
+        newIndex = count - 1;
+      }
     } else {
-      newIndex = count - 1;
+      newIndex = random();
     }
     await setCurrentIndex(newIndex);
     if (isPlaying) {
       audio.current.play();
     }
   };
+  const handleShuffle = () => {
+    if (!isShuffle) {
+      setOptionShuffle("active");
+      setIsShuffle(true);
+    } else {
+      setOptionShuffle("");
+      setIsShuffle(false);
+    }
+  };
+  const handleRepeat = () => {
+    if (!isRepeat) {
+      setOptionRepeat("active");
+      setIsRepeat(true);
+    } else {
+      setOptionRepeat("");
+      setIsRepeat(false);
+    }
+  };
+  const handleLike = () => {
+    const newOption = optionLike === "" ? "like" : "";
+    setOptionLike(newOption);
+  };
+  const like = (e) => {
+    // console.log(e.target.closest(".icon"));
+    const songClick = e.target.closest(".icon");
+    songClick.classList.toggle("like");
+  };
+  const random = () => {
+    const index = Math.floor(Math.random() * 6);
+    return index;
+  };
+  if (audio.current) {
+    audio.current.onended = () => {
+      if (isRepeat) {
+        audio.current.load();
+        audio.current.play();
+      } else {
+        handleNext();
+      }
+    };
+  }
 
   return (
     <div className="App">
@@ -211,7 +247,7 @@ const App = () => {
           <i className="fas fa-search"></i>
         </div>
         <div className={`bodyPlayer ${option}`}></div>
-        <PlayList songs={songs} option={option} />
+        <PlayList songs={songs} option={option} like={like} />
         <div className={`shadow ${option}`}></div>
         <div className={`info ${option}`}>
           <h4>
@@ -226,7 +262,15 @@ const App = () => {
           preCallback={handlePre}
           nextCallback={handleNext}
         />
-        <Footer option={option} />
+        <Footer
+          option={option}
+          optionLike={optionLike}
+          optionRepeat={optionRepeat}
+          optionShuffle={optionShuffle}
+          likeCallback={handleLike}
+          repeatCallback={handleRepeat}
+          shuffleCallback={handleShuffle}
+        />
         <div className={`current ${option}`}>
           <h2>{songs[currentIndex].name}</h2>
         </div>
