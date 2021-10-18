@@ -53,10 +53,15 @@ const songs = [
     image: song6_img,
   },
 ];
-const PlayList = ({ songs, option, like }) => {
+const PlayList = ({ songs, option, like, move, current }) => {
   const list = songs.map((song, index) => {
     return (
-      <div key={index} className="song">
+      <div
+        key={index}
+        className={`song ${index === current ? "playing" : ""}`}
+        onClick={move}
+        id={index}
+      >
         <div className="song-item nr">
           <h5>{index + 1}</h5>
         </div>
@@ -218,6 +223,18 @@ const App = () => {
     const songClick = e.target.closest(".icon");
     songClick.classList.toggle("like");
   };
+  const move = async (e) => {
+    const songPlaying = e.target.closest(".song.playing");
+    const heart = e.target.closest(".icon");
+    if (!songPlaying && !heart) {
+      const songClick = e.target.closest(".song");
+      const index = parseInt(songClick.id);
+      await setCurrentIndex(index);
+      if (isPlaying) {
+        audio.current.play();
+      }
+    }
+  };
   const random = () => {
     const index = Math.floor(Math.random() * 6);
     return index;
@@ -247,7 +264,13 @@ const App = () => {
           <i className="fas fa-search"></i>
         </div>
         <div className={`bodyPlayer ${option}`}></div>
-        <PlayList songs={songs} option={option} like={like} />
+        <PlayList
+          songs={songs}
+          option={option}
+          like={like}
+          move={move}
+          current={currentIndex}
+        />
         <div className={`shadow ${option}`}></div>
         <div className={`info ${option}`}>
           <h4>
